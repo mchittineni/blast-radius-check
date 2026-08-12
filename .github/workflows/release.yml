@@ -1,0 +1,78 @@
+name: Release
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to point the major tag at (e.g. v1.2.3)'
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify the released commit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag || github.event.release.tag_name }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run all checks
+        run: npm run all
+
+      - name: Confirm dist/ matches the released sources
+        run: |
+          set -euo pipefail
+          if [ -n "$(git status --porcelain -- dist/)" ]; then
+            echo "::error::dist/ does not match the sources at this tag. Do not release."
+            exit 1
+          fi
+
+  major-tag:
+    name: Move the major tag
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ inputs.tag || github.event.release.tag_name }}
+          fetch-depth: 0
+
+      - name: Point the major tag at this release
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.event.release.tag_name }}
+        run: |
+          set -euo pipefail
+
+          # Accept only a strict semver tag; anything else is a mistake, not a release.
+          if ! printf '%s' "$RELEASE_TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Refusing to act on '$RELEASE_TAG' — expected the form v1.2.3."
+            exit 1
+          fi
+
+          MAJOR_TAG="${RELEASE_TAG%%.*}"
+          echo "Pointing $MAJOR_TAG at $RELEASE_TAG"
+
+          git config user.name 'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git tag -f -a "$MAJOR_TAG" -m "Track the latest $MAJOR_TAG release ($RELEASE_TAG)"
+          git push --force origin "$MAJOR_TAG"

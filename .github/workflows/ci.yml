@@ -1,0 +1,121 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verify on Node ${{ matrix.node }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node: ['22', '24']
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Test with coverage
+        run: npm run test:coverage
+
+      - name: Build bundle
+        run: npm run build
+
+  smoke:
+    name: Run the built action
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build bundle
+        run: npm run build
+
+      - name: Write a fixture graph
+        run: |
+          set -euo pipefail
+          cat > fixture-graph.json <<'JSON'
+          {
+            "schemaVersion": 1,
+            "generatedAt": "2026-01-01T00:00:00.000Z",
+            "org": "acme",
+            "artifacts": {},
+            "repos": {}
+          }
+          JSON
+
+      - name: The bundle loads and no-ops outside a pull request
+        if: github.event_name != 'pull_request'
+        env:
+          INPUT_GITHUB-TOKEN: ${{ github.token }}
+          INPUT_GRAPH-PATH: fixture-graph.json
+        run: |
+          set -euo pipefail
+          node dist/index.js
+          echo "bundle executed cleanly with no pull request in context"
+
+      - name: Analyze this pull request against the fixture graph
+        if: github.event_name == 'pull_request'
+        id: check
+        uses: ./
+        with:
+          github-token: ${{ github.token }}
+          graph-path: fixture-graph.json
+          comment-mode: never
+          fail-on-impact: 'false'
+
+      - name: Assert the action produced a report
+        if: github.event_name == 'pull_request'
+        env:
+          HAS_IMPACT: ${{ steps.check.outputs.has-impact }}
+          AFFECTED: ${{ steps.check.outputs.affected-repo-count }}
+        run: |
+          set -euo pipefail
+          echo "has-impact=$HAS_IMPACT affected=$AFFECTED"
+          # An empty graph cannot produce impact; anything else means the
+          # analysis or the output plumbing is broken.
+          test "$HAS_IMPACT" = "false"
+          test "$AFFECTED" = "0"

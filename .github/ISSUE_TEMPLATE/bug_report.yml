@@ -1,0 +1,110 @@
+name: 🐛 Bug report
+description: The impact report is wrong, missing, or the action fails.
+labels: ['bug', 'needs triage']
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the report. This action's behavior depends heavily on the
+        `graph.json` it was given, so the relevant slice of that file is usually
+        the difference between a guess and a fix.
+
+        **Do not paste tokens, and redact private repository names if they are
+        sensitive.** A minimal excerpt is enough.
+
+  - type: input
+    id: version
+    attributes:
+      label: Action version
+      description: The tag or commit SHA in your `uses:` line.
+      placeholder: v1.0.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of problem is it?
+      options:
+        - Missed impact (downstream repo affected, not reported)
+        - False impact (reported a repo that is not affected)
+        - No comment posted
+        - Duplicate comments instead of one updated comment
+        - The action failed with an error
+        - Comment formatting or rendering
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected instead
+    validations:
+      required: true
+
+  - type: textarea
+    id: workflow
+    attributes:
+      label: Your workflow step
+      description: The step invoking this action, plus the step that fetches the graph.
+      render: yaml
+      placeholder: |
+        - uses: mchittineni/blast-radius-check@v1
+          with:
+            github-token: ${{ secrets.GITHUB_TOKEN }}
+            graph-path: .graph/graph.json
+    validations:
+      required: true
+
+  - type: textarea
+    id: graph-excerpt
+    attributes:
+      label: Relevant graph.json excerpt
+      description: >-
+        The `repos["owner/name"].exports` entry for the repository the pull request
+        is in, and the matching `artifacts[...]` node with its consumers. Impact is
+        computed entirely from those two, so they almost always explain the result.
+      render: json
+    validations:
+      required: false
+
+  - type: textarea
+    id: changed-files
+    attributes:
+      label: Files the pull request changed
+      description: Especially whether it touched the file that declares the artifact.
+      render: shell
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Step log
+      description: The action's output, including any warnings.
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues for this problem
+          required: true
+        - label: 'The job grants `pull-requests: write` (required to post a comment)'
+          required: false
+        - label: The graph was generated recently by the indexer action
+          required: false
+        - label: I redacted tokens and anything else sensitive
+          required: true

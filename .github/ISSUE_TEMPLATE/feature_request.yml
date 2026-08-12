@@ -1,0 +1,58 @@
+name: ✨ Feature request
+description: Suggest a capability for the pull-request impact report.
+labels: ['enhancement', 'needs triage']
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Describing the problem you hit is more useful than describing a solution —
+        it often turns out there is a simpler way in.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What are you unable to do today? What did you try?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What you would like to happen
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Area
+      options:
+        - Impact analysis accuracy
+        - Comment content or formatting
+        - New input or output
+        - Comment lifecycle (posting, updating, removing)
+        - Integration with other actions or checks
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: report-example
+    attributes:
+      label: What should the report say?
+      description: >-
+        A sketch of the comment you would want to receive is the most useful form
+        this can take — it makes the change concrete and reviewable.
+      render: markdown
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+    validations:
+      required: false
