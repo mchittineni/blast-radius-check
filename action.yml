@@ -1,0 +1,48 @@
+# Marketplace requires this file at the repository root, one action per repository.
+name: 'Cross-Repo Blast Radius Check'
+description: 'Analyze a pull request against a cross-repo dependency graph and comment which downstream repositories it affects.'
+author: 'Manideep Chittineni'
+
+branding:
+  icon: 'alert-triangle'
+  color: 'orange'
+
+inputs:
+  github-token:
+    description: 'Token used to read the pull request and write its comment. Needs `pull-requests: write`.'
+    required: true
+    default: '${{ github.token }}'
+  graph-path:
+    description: 'Path to the graph.json produced by the blast-radius-indexer action.'
+    required: false
+    default: 'graph.json'
+  fail-on-impact:
+    description: 'Fail the step when downstream impact is detected.'
+    required: false
+    default: 'false'
+  comment-mode:
+    description: >-
+      When to write the pull-request comment: `always`, `on-impact` (post only
+      when downstream repositories are affected, removing a stale comment
+      otherwise), or `never` (outputs and job summary only).
+    required: false
+    default: 'always'
+
+outputs:
+  has-impact:
+    description: 'True when at least one downstream repository is affected.'
+  affected-repo-count:
+    description: 'Number of distinct downstream repositories affected.'
+  affected-repos:
+    description: 'Comma-separated list of affected downstream repositories.'
+  touched-artifact-count:
+    description: 'Number of shared artifact declarations modified by the pull request.'
+  report-markdown:
+    description: 'The rendered markdown impact report.'
+
+runs:
+  # GitHub Actions ships only `node20` and `node24` JavaScript runtimes; `node24`
+  # is the lowest available option satisfying this project's Node >=22 floor.
+  # Requires Actions Runner v2.327.1 or newer.
+  using: 'node24'
+  main: 'dist/index.js'
