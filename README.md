@@ -95,7 +95,7 @@ long-lived pull request keeps exactly one impact comment.
 | :---------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `always`    | Post or update the comment on every run, including the clean "no impact" result.                                                                           |
 | `on-impact` | Comment only when downstream repositories are affected. If a previous run reported impact and the latest push clears it, the stale comment is **removed**. |
-| `never`     | No comment at all use the outputs and the job summary. Useful when another job aggregates the result.                                                    |
+| `never`     | No comment at all use the outputs and the job summary. Useful when another job aggregates the result.                                                      |
 
 ## Outputs
 
