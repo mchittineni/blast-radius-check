@@ -11,7 +11,7 @@ downstream repository that consumes it, and the version each one is pinned to.
 
 It reads a `graph.json` describing which repository publishes each shared artifact
 and which repositories consume it. Any process that produces that shape will do
-the companion **blast-radius-indexer** action builds one by scanning an
+the companion [**blast-radius-indexer**](https://github.com/mchittineni/blast-radius-indexer) action builds one by scanning an
 organization. [`src/types.ts`](src/types.ts) is the authoritative schema.
 
 ---
@@ -37,13 +37,13 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v7
 
-      # Fetch the graph from wherever your nightly indexer commits it.
+      # Fetch the graph from wherever your blast-radius-indexer commits it.
       - name: Checkout Repository for Graph
         uses: actions/checkout@v7
         with:
-          repository: mchittineni/dependency-graph
+          repository: owner/dependency-graph
           path: .graph
-          token: ${{ secrets.GRAPH_READ_TOKEN }} # omit if the repo is public
+          github-token: ${{ secrets.GITHUB_TOKEN }} # omit if the repo is public
 
       - name: Setup Blast Radius
         uses: mchittineni/blast-radius-check@v1
