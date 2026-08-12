@@ -5,12 +5,12 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 A GitHub Action that tells a pull request **which other repositories it is about to
-break**. When a PR modifies a file that declares a shared artifact — an npm
-package, a container image, a Terraform module — this posts a comment naming every
+break**. When a PR modifies a file that declares a shared artifact an npm
+package, a container image, a Terraform module this posts a comment naming every
 downstream repository that consumes it, and the version each one is pinned to.
 
 It reads a `graph.json` describing which repository publishes each shared artifact
-and which repositories consume it. Any process that produces that shape will do —
+and which repositories consume it. Any process that produces that shape will do
 the companion **blast-radius-indexer** action builds one by scanning an
 organization. [`src/types.ts`](src/types.ts) is the authoritative schema.
 
@@ -35,11 +35,11 @@ jobs:
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7
 
       # Fetch the graph from wherever your nightly indexer commits it.
       - name: Checkout Repository for Graph
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        uses: actions/checkout@v7
         with:
           repository: mchittineni/dependency-graph
           path: .graph
@@ -53,7 +53,7 @@ jobs:
 ```
 
 `permissions: pull-requests: write` is what lets the comment be posted. Without it
-the analysis still runs — the result lands in the job summary and the outputs, and
+the analysis still runs the result lands in the job summary and the outputs, and
 the action logs a warning instead of failing.
 
 ---
@@ -95,7 +95,7 @@ long-lived pull request keeps exactly one impact comment.
 | :---------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `always`    | Post or update the comment on every run, including the clean "no impact" result.                                                                           |
 | `on-impact` | Comment only when downstream repositories are affected. If a previous run reported impact and the latest push clears it, the stale comment is **removed**. |
-| `never`     | No comment at all — use the outputs and the job summary. Useful when another job aggregates the result.                                                    |
+| `never`     | No comment at all use the outputs and the job summary. Useful when another job aggregates the result.                                                    |
 
 ## Outputs
 
@@ -148,12 +148,12 @@ long-lived pull request keeps exactly one impact comment.
 The action is deliberately quiet in the cases where it cannot know something, and
 says so in the comment rather than passing silently:
 
-- **This repository is not in the graph** — newly created, filtered out, or added
+- **This repository is not in the graph**: newly created, filtered out, or added
   after the last index run.
-- **A modified artifact has no consumers** — nothing downstream to break.
-- **The graph is more than 48 hours old** — recently added dependencies may be
+- **A modified artifact has no consumers**: nothing downstream to break.
+- **The graph is more than 48 hours old**: recently added dependencies may be
   missing, noted in the comment footer.
-- **The pull request exceeds 3000 files** — the GitHub API caps the file list, so
+- **The pull request exceeds 3000 files**: the GitHub API caps the file list, so
   the comment states that impact may be under-reported.
 
 ### Safety of the rendered comment
