@@ -45,11 +45,17 @@ const options = {
   platform: 'node',
   format: 'esm',
   target: NODE_TARGET,
-  sourcemap: true,
+  // No source map. It weighed more than the bundle itself, and Node ignores it
+  // unless `--enable-source-maps` is set, which the Actions runtime does not do.
+  // Readable stack traces come from `minify: false` below, not from the map.
+  sourcemap: false,
   // Action logs surface the bundle's own stack traces; keep them readable.
   minify: false,
   treeShaking: true,
-  legalComments: 'external',
+  // Appended to the bundle rather than written alongside it: the MIT notices of
+  // the code bundled in here have to travel with the distribution, and a single
+  // committed artifact is one fewer thing to lose.
+  legalComments: 'eof',
   logLevel: 'warning',
   banner: { js: BANNER },
 };
