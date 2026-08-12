@@ -9,8 +9,10 @@ break**. When a PR modifies a file that declares a shared artifact — an npm
 package, a container image, a Terraform module — this posts a comment naming every
 downstream repository that consumes it, and the version each one is pinned to.
 
-It reads the `graph.json` produced by
-[**blast-radius-indexer**](https://github.com/mchittineni/blast-radius-indexer).
+It reads a `graph.json` describing which repository publishes each shared artifact
+and which repositories consume it. Any process that produces that shape will do —
+the companion **blast-radius-indexer** action builds one by scanning an
+organization. [`src/types.ts`](src/types.ts) is the authoritative schema.
 
 ---
 
